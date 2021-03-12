@@ -1,0 +1,363 @@
+---
+title: "Symptoms - 'NativeScript Task Dispatcher' - IEEE TMC"
+author: "Carlos Granell, Miguel Matey, Alberto González, Sven Casteleyn - [SyMptOMS team](http://geotec.uji.es/projects/SyMptOMS/), [GEOTEC research group](http://geotec.uji.es/)"
+date: "19/2/2021 (updated `r format(Sys.time(), '%d %B, %Y')`)"
+output: 
+  html_document:
+    df_print: paged
+    toc: yes
+    toc_depth: 4
+---
+
+```{r setup, include=FALSE, eval=TRUE}
+knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
+```
+
+This document analyses the self-developed scheduler component in Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). This sofware component tested here is called [NativeScript Task Dispatcher](https://www.npmjs.com/package/nativescript-task-dispatcher), that's a [NativeScript](https://nativescript.org/) plugin aimed to ease mobile app's tasks definition and the execution of task workflows in background, regardless of whether the app is visible to the user or not. [NativeScript Task Dispatcher](https://www.npmjs.com/package/nativescript-task-dispatcher) is publicy available as open source software. 
+
+
+Required libraries and runtime environment description are as follows.
+
+```{r load_libraries, echo=TRUE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(kableExtra)
+library(here)
+library(lubridate)
+library(stringr)
+library(scales)
+library(grid)
+library(gridBase)
+library(gridExtra)
+
+```
+
+
+```{r set_seed}
+# just in case
+set.seed(nchar("Symptoms - 'NativeScript Task Dispatcher' experiment"))
+```
+
+```{r gsheetdata_files}
+
+files <- tibble(
+  experiment = c(rep("#1", 4), rep("#2", 4)),
+  gsheets_name = c("AD_BQ.csv", "AD_NV.csv", "AD_A1.csv", "BA_H9.csv",
+                   "BA_BQ.csv", "BA_NV.csv", "BA_A1.csv", "AD_H9.csv")
+)
+```
+
+# Data preparation
+
+Raw data files are cleaned and merged together into a single file stored in the folder `data`. New fields such as dates breakdown are computed too. 
+
+```{r merge_datafiles_defs}
+
+schedulers <- c("AD" = "NativeScript", 
+                "BA" = "Ad-hoc")
+
+devices <- c("NV" = "Nvidia Shield Tablet (Gen 1)",
+             "BQ" = "BQ Aquaris V Plus",
+             "A1" = "Xiaomi Mi A1",
+             "H9" = "Honor 9 (STF-L09)")
+
+os <- c("NV" = "7.0",
+        "BQ" = "8.1",
+        "A1" = "9.0",
+        "H9" = "9.0")
+
+baseline_delay <- 60
+```
+
+Here, we reuse the data files generated in April/May 2020, whose file names start with the prefix `BA_`. 
+
+```{r merge_datafiles, eval=FALSE}
+
+data_path <- here::here("data-raw", "feb2021")
+file_names <- list.files(path = data_path)
+file_paths <- list.files(path = data_path, full.names = TRUE)
+
+data_merged <- data.frame()
+
+
+for (f in 1:length(file_names)) {
+  filename <- stringr::str_sub(file_names[f], 1, 5)
+
+  parts <- stringr::str_split(filename, "_", simplify = TRUE)
+  
+  scheduler_id = parts[1]
+  scheduler_name <- schedulers[[scheduler_id]]
+  device_id <- parts[2]
+  device_name <- devices[[device_id]]
+  device_desc <- paste0(scheduler_name, " - ", device_name)
+  device_os <- os[[device_id]]
+  
+  data_temp <- read_csv(file_paths[f], col_names = TRUE, 
+                        cols(
+                          battery = col_double(),
+                          exec_timestamp = col_double(),
+                          planning_timestamp = col_double(),
+                          task = col_character()
+                        ))
+
+
+  data_temp <- 
+    data_temp %>%
+    mutate(scheduler = scheduler_name,
+           device_id = device_id,
+           device_name = device_name,
+           device_desc = device_desc,
+           device_os = factor(device_os)) 
+  
+  data_merged <- rbind(data_merged, data_temp)
+}       
+
+
+data_merged <- 
+  data_merged %>%
+  select(-task, -battery) %>%
+  mutate(exec_date = as_datetime(exec_timestamp/1000, tz="Europe/Madrid"),
+         plan_date = as_datetime(planning_timestamp/1000, tz="Europe/Madrid"))
+         # plan_minute = lubridate::minute(plan_date),
+         # plan_hour = lubridate::hour(plan_date),
+         # plan_day = lubridate::day(plan_date),
+         # plan_month = lubridate::month(plan_date),
+         # exec_minute = lubridate::minute(exec_date),
+         # exec_hour = lubridate::hour(exec_date),
+         # exec_day = lubridate::day(exec_date),
+         # exec_month = lubridate::month(exec_date),
+         # time_period = ifelse(between(plan_hour,0, 7), "nighttime", "daytime"))
+
+
+# Delay units: seconds
+data_complete <-
+  data_merged %>%
+  group_by(device_id, scheduler) %>%
+  arrange(exec_date) %>%
+  mutate(step = row_number(),
+         diff = exec_date - dplyr::lag(exec_date),
+         diff_secs = as.numeric(diff, units = "secs"), 
+         delay = diff_secs - baseline_delay)
+      
+
+
+data_path <- here::here("data", "data_ieeetms.csv")
+write_csv(data_complete, data_path)
+data_path <- here::here("data", "data_ieeetms.rds")
+saveRDS(data_complete, data_path)
+
+```
+
+# Analysis
+
+
+```{r load_assessdata, warning=FALSE}
+assessment_file <- here::here("data", "data_ieeetms.rds")
+data <- readRDS(assessment_file)
+
+n_observations <- nrow(data) 
+
+```
+__Key Variables__:
+
+- quantitative (interval)
+  - `plan_date` (_`r class(data$plan_date)`_): task planning time.
+  - `exec_date` (_`r class(data$exec_date)`_): task execution time.  
+  - `step`: relative position 
+
+- quantitative (ratio)
+  - `diff` (_`r `class(data$diff)`_): difference in seconds between the current and previous execution times.
+  - `diff_secs` (_`r class(data$diff_secs)`_): numeric value of `diff`.
+  - `delay` (_`r class(data$delay)`_): normalised execution delay in seconds (`diff_secs` - `r baseline_delay`).
+
+- categorical (nominal)
+  - `device_id`: device identifier
+  - `device_name`: device name
+  - `device_os`: Android OS version
+  - `scheduler`: scheduler type
+
+
+## Experiment 1
+
+### Setup
+
+TODO: Table 1 can be generated from code too
+
+### Missingness of data 
+
+```{r missigness_prep}
+
+data %>%
+  dplyr::group_by(device_id, scheduler, device_os) %>%
+  dplyr::arrange(step) %>%
+  dplyr::summarise(n_real_exec = max(step),
+                min_plan_date = min(plan_date),
+                max_plan_date = max(plan_date),
+                n_plan_exec = round(as.numeric(max_plan_date - min_plan_date, units="mins"))) %>%
+  dplyr::select(device_id, scheduler, device_os, n_plan_exec, 
+                n_real_exec, min_plan_date, max_plan_date) -> missingness
+
+
+n_plan_exec_a1ba <- 20264
+n_plan_exec_nvba <- 20264
+```
+
+But, *A1 with Ad-hoc* and *NV with Ad-hoc* did **not** end the experiment. The expected number of executions were
+
+- A1: `r n_plan_exec_a1ba` instead of `r filter(missingness, device_id =='A1' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
+
+- NV: `r n_plan_exec_nvba` instead of `r filter(missingness, device_id =='NV' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
+
+
+```{r missigness_update}
+missingness[1,c("n_plan_exec")] <- n_plan_exec_a1ba
+missingness[7,c("n_plan_exec")] <- n_plan_exec_nvba
+```
+
+```{r missingness_percent}
+
+missingness <-
+  missingness %>%
+  dplyr::mutate(percent = (1 - (n_real_exec / n_plan_exec)),
+                percent_lbl = scales::percent(percent, accuracy = 0.01))
+                
+```
+
+```{r missingness_table}
+missingness$device_os <- forcats::fct_relevel(missingness$device_os, c("7.0", "8.1", "9.0"))
+
+knitr::kable(missingness %>%
+               select(`ID` = device_id,
+                      `Scheduler` = scheduler,
+                      `OS` = device_os,
+                      `# planned executions` = n_plan_exec,
+                      `# real executions` = n_real_exec,
+                      `% missingness` = percent_lbl),
+             format = "html",
+             booktabs = TRUE,
+             caption = "Missingness of data scans per device and scheduler.") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("striped", "bordered", "condensed"))
+
+```
+
+```{r missingness_means}
+
+missingness_means <- 
+  missingness %>% 
+  dplyr::group_by(scheduler) %>% 
+  dplyr::summarise(mean = mean(percent)) %>%
+  dplyr::mutate(mean_lbl = scales::percent(mean, accuracy = 0.1))
+
+knitr::kable(missingness_means, 
+             format = "html",
+             booktabs = TRUE,
+             caption = "Average Missingness of data per type of scheduler.")
+```
+
+
+### Performance
+
+```{r}
+
+limit_secs <- 10
+data %>%
+  dplyr::filter(abs(delay) >= limit_secs) %>%
+  dplyr::select(scheduler, device_id, device_name, device_os, delay) -> outliers
+
+```
+
+We discard `r nrow(outliers)` out of `r n_observations` observations whose abs(delay) >= `r limit_secs` seconds.
+
+```{r delay_dataout}
+
+data %>%
+  dplyr::filter(abs(delay) < limit_secs) %>%
+  dplyr::select(scheduler, device_id, device_name, device_os, delay) -> performance
+```
+
+
+
+
+```{r delay_boxplot, fig.height=5, fig.width=7, dpi=300}
+
+devices_ordered <- c("NV", "BQ", "A1", "H9") 
+missingness_basic <- missingness %>% filter(scheduler == "Ad-hoc")
+missingness_advanced <- missingness %>% filter(scheduler == "NativeScript")
+devices_os <- 
+  missingness %>% 
+  dplyr::filter(scheduler == "NativeScript") %>% 
+  dplyr::mutate(device_os_lbl = paste("Android", device_os)) %>%
+  dplyr::select(device_id, device_os_lbl)
+
+# Not run
+# RColorBrewer::brewer.pal(n = 3, name="Dark2")[1:2]
+# [1] "#1B9E77" "#D95F02"
+  
+performance %>%
+  ggplot2::ggplot(aes(y = delay, x=device_id, color=scheduler)) +
+  geom_boxplot(fill="white", outlier.fill = "white", outlier.alpha = 0.2) +
+  
+  scale_x_discrete(limits=devices_ordered) +
+  scale_y_continuous(breaks=seq(-10,10,2)) +
+  scale_color_brewer(palette = "Dark2") +
+  # scale_color_brewer(palette = "Paired") +
+  # scale_color_grey(start = 0, end = 0.5) +
+  
+  geom_label(data = missingness_advanced, aes(x = device_id, y = 10, label = percent),
+            color="#D95F02",
+            size=4, nudge_y= 0.5,nudge_x = 0.2) +
+  geom_label(data = missingness_basic, aes(x = device_id, y = 10, label = percent),
+            color="#1B9E77", 
+            size=4, nudge_y= 0.5,nudge_x = -0.2) +
+  
+  geom_label(data = devices_os, aes(x = device_id, y = -10, label = device_os_lbl), 
+            color="grey30", size=3, nudge_y= 0.5,nudge_x = 0) +
+  
+  labs(title="", x ="Devices", y="Delay [seconds]") +
+  guides(color=guide_legend(nrow = 2)) + 
+  theme_minimal() +
+  
+  # Add legend inside the plot
+  theme(legend.title = element_blank(), 
+        #  c(0,0) corresponds to the “bottom left” and c(1,1) to the “top right” position.
+        legend.position = c(0.90, 0.20),
+        legend.background = element_rect(color = "grey70", size = 0.2, linetype ="solid"),
+        legend.key = element_blank()) -> p
+
+p
+
+ggplot2::ggsave(plot = p, filename = here::here("figs", "fig_boxplot.png"), 
+               width = 7, height = 5, dpi = 300)
+
+```
+
+
+
+
+```{r delay_histogram, fig.height=14, fig.width=10,  warning=FALSE, message=FALSE}
+
+performance %>%
+  dplyr::filter(device_id %in% c("BQ", "H9")) %>% 
+  ggplot2::ggplot(aes(x=delay, color=scheduler, fill=scheduler)) +
+  ggplot2::geom_histogram(binwidth = 0.2,  alpha=0.5) + #4
+  ggplot2::scale_color_brewer(palette = "Dark2") +
+  ggplot2::scale_fill_brewer(palette = "Dark2") +
+  ggplot2::scale_x_continuous(breaks=seq(-10,10,2)) +
+  ggplot2::scale_y_log10(breaks = scales::trans_breaks("log10", function(x) 10^x),
+                labels = scales::trans_format("log10", scales::math_format(10^.x))) +
+  
+  ggplot2::facet_wrap(device_name~scheduler, ncol = 2, nrow = 2) +
+  ggplot2::labs(title="", x ="Delay [seconds]", y="Frequency [log10]") +
+  # guides(color=guide_legend(ncol = 2)) + 
+  ggplot2::theme_minimal() + 
+  
+  ggplot2::theme(legend.title = element_blank(), 
+                 legend.position = "none") -> p
+
+p <- p + ggplot2::annotation_logticks(sides = "l")
+
+p
+
+```
+
+
+
