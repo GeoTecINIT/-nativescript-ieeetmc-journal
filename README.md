@@ -11,6 +11,7 @@ This repository is the reproducibility package for the article “Using mobile D
 
 - `data-raw/*.csv`. Each file corresponds to the raw data collected during 2 weeks per type of device and scheduling application.
 - `data/data_ieeetmc.{csv,rds}`: Processed data ready for analysis that integrates all raw datasets.
+- `data/devices.csv`: List of Android-based mobile devices used for experimentation.
 - `ntd-experiment1.Rmd`: R Markdown document with the analysis and visualisation of the *Experiment 1: simple task scheduling*.
 - `figs/fig_boxplot.png`: figure created by the analysis `ntd-experiment1.Rmd` and is part of the submitted article (Fig 4).
 - `Dockerfile`: A recipe for the computational environment using [Docker](https://en.wikipedia.org/wiki/Docker_(software)).

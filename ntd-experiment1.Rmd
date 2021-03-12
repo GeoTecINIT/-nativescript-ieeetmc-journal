@@ -1,19 +1,32 @@
 ---
-title: "Symptoms - 'NativeScript Task Dispatcher' - IEEE TMC"
-author: "Carlos Granell, Miguel Matey, Alberto González, Sven Casteleyn - [SyMptOMS team](http://geotec.uji.es/projects/SyMptOMS/), [GEOTEC research group](http://geotec.uji.es/)"
-date: "19/2/2021 (updated `r format(Sys.time(), '%d %B, %Y')`)"
+title: "Reproducible Package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling'"
+author:
+  - name: Alberto González, Miguel Matey, Carlos Granell, Sven Casteleyn - [SyMptOMS team](http://geotec.uji.es/projects/SyMptOMS/)
+    affiliation: [GEOTEC research group](http://geotec.uji.es/), Universitat Jaume I of Castellón, Spain
+date: "12/Mar/2021 (updated `r format(Sys.time(), '%d %B, %Y')`)"
 output: 
   html_document:
     df_print: paged
+    number_sections: yes
+    theme: readable
     toc: yes
     toc_depth: 4
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: 4
+    
+abstract: |
+  This document analyses the reliability and scheduling performance of the self-developed library [NativeScript Task Dispatcher (NTD)](https://github.com/GeoTecINIT/nativescript-task-dispatcher) on a series of Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). The focus is on the Experiment 1 (simple task scheduling).
+
+urlcolor: blue    
 ---
+
 
 ```{r setup, include=FALSE, eval=TRUE}
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 ```
 
-This document analyses the self-developed scheduler component in Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). This sofware component tested here is called [NativeScript Task Dispatcher](https://www.npmjs.com/package/nativescript-task-dispatcher), that's a [NativeScript](https://nativescript.org/) plugin aimed to ease mobile app's tasks definition and the execution of task workflows in background, regardless of whether the app is visible to the user or not. [NativeScript Task Dispatcher](https://www.npmjs.com/package/nativescript-task-dispatcher) is publicy available as open source software. 
 
 
 Required libraries and runtime environment description are as follows.
@@ -34,19 +47,50 @@ library(gridExtra)
 
 ```{r set_seed}
 # just in case
-set.seed(nchar("Symptoms - 'NativeScript Task Dispatcher' experiment"))
+set.seed(nchar("Reproducible Package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling'"))
 ```
 
-```{r gsheetdata_files}
+```{r rawdata_devices}
 
-files <- tibble(
+devices_file <- here::here("data", "devices.csv")
+
+cols(
+   .default = readr::col_character(),
+   id = readr::col_character(),
+   device = readr::col_character(),
+   os = readr::col_character(),
+   exp_1 = readr::col_logical(),
+   exp_2 = readr::col_logical()
+) -> export_cols
+
+devices <- readr::read_csv(
+  file = devices_file, 
+  col_names = TRUE, 
+  trim_ws=TRUE,
+  col_types = export_cols,
+  na = "NA")
+
+```
+
+
+```{r rawdata_files}
+
+# TODO: Delete?
+files <- tibble::tibble(
   experiment = c(rep("#1", 4), rep("#2", 4)),
   gsheets_name = c("AD_BQ.csv", "AD_NV.csv", "AD_A1.csv", "BA_H9.csv",
                    "BA_BQ.csv", "BA_NV.csv", "BA_A1.csv", "AD_H9.csv")
 )
+
 ```
 
-# Data preparation
+# Experiment 1: simple taks scheduling
+
+For this experiment, we deployed two applications: 1/ an ad-hoc application written in Java without an alarm watchdog, 2/ a NativeScript application that uses the NTD library. Both applications ran a simple recurrent
+task – without logic or complex computations to produce a minimal execution overhead – every minute for 2 weeks. We reused the data files generated in April/May 2020, whose file names start with the prefix `BA_` corresponds to the ad-hoc application (option 1). The data file names that start with `AD_` where created with the NTD-based application (option 2) in February 2021.
+
+
+## Data preparation
 
 Raw data files are cleaned and merged together into a single file stored in the folder `data`. New fields such as dates breakdown are computed too. 
 
@@ -55,24 +99,24 @@ Raw data files are cleaned and merged together into a single file stored in the 
 schedulers <- c("AD" = "NativeScript", 
                 "BA" = "Ad-hoc")
 
-devices <- c("NV" = "Nvidia Shield Tablet (Gen 1)",
-             "BQ" = "BQ Aquaris V Plus",
-             "A1" = "Xiaomi Mi A1",
-             "H9" = "Honor 9 (STF-L09)")
 
-os <- c("NV" = "7.0",
-        "BQ" = "8.1",
-        "A1" = "9.0",
-        "H9" = "9.0")
+# devices <- c("NV" = "Nvidia Shield Tablet (Gen 1)",
+#              "BQ" = "BQ Aquaris V Plus",
+#              "A1" = "Xiaomi Mi A1",
+#              "H9" = "Honor 9 (STF-L09)")
+
+# os <- c("NV" = "7.0",
+#         "BQ" = "8.1",
+#         "A1" = "9.0",
+#         "H9" = "9.0")
 
 baseline_delay <- 60
 ```
 
-Here, we reuse the data files generated in April/May 2020, whose file names start with the prefix `BA_`. 
 
 ```{r merge_datafiles, eval=FALSE}
 
-data_path <- here::here("data-raw", "feb2021")
+data_path <- here::here("data-raw")
 file_names <- list.files(path = data_path)
 file_paths <- list.files(path = data_path, full.names = TRUE)
 
@@ -87,9 +131,9 @@ for (f in 1:length(file_names)) {
   scheduler_id = parts[1]
   scheduler_name <- schedulers[[scheduler_id]]
   device_id <- parts[2]
-  device_name <- devices[[device_id]]
+  device_name <- filter(devices, id == device_id) %>% select(device) %>% .$device
   device_desc <- paste0(scheduler_name, " - ", device_name)
-  device_os <- os[[device_id]]
+  device_os <-  filter(devices, id == device_id) %>% select(os) %>% .$os
   
   data_temp <- read_csv(file_paths[f], col_names = TRUE, 
                         cols(
@@ -117,16 +161,7 @@ data_merged <-
   select(-task, -battery) %>%
   mutate(exec_date = as_datetime(exec_timestamp/1000, tz="Europe/Madrid"),
          plan_date = as_datetime(planning_timestamp/1000, tz="Europe/Madrid"))
-         # plan_minute = lubridate::minute(plan_date),
-         # plan_hour = lubridate::hour(plan_date),
-         # plan_day = lubridate::day(plan_date),
-         # plan_month = lubridate::month(plan_date),
-         # exec_minute = lubridate::minute(exec_date),
-         # exec_hour = lubridate::hour(exec_date),
-         # exec_day = lubridate::day(exec_date),
-         # exec_month = lubridate::month(exec_date),
-         # time_period = ifelse(between(plan_hour,0, 7), "nighttime", "daytime"))
-
+         
 
 # Delay units: seconds
 data_complete <-
@@ -139,19 +174,18 @@ data_complete <-
          delay = diff_secs - baseline_delay)
       
 
-
-data_path <- here::here("data", "data_ieeetms.csv")
+data_path <- here::here("data", "data_ieeetmc.csv")
 write_csv(data_complete, data_path)
-data_path <- here::here("data", "data_ieeetms.rds")
+data_path <- here::here("data", "data_ieeetmc.rds")
 saveRDS(data_complete, data_path)
 
 ```
 
-# Analysis
+## Analysis
 
 
 ```{r load_assessdata, warning=FALSE}
-assessment_file <- here::here("data", "data_ieeetms.rds")
+assessment_file <- here::here("data", "data_ieeetmc.rds")
 data <- readRDS(assessment_file)
 
 n_observations <- nrow(data) 
@@ -176,11 +210,25 @@ __Key Variables__:
   - `scheduler`: scheduler type
 
 
-## Experiment 1
+### Table 1 
 
-### Setup
+Mobile devices used for experimentation.
 
-TODO: Table 1 can be generated from code too
+```{r devices_table}
+
+knitr::kable(devices %>%
+               dplyr::select(ID = id, 
+                             Device = device, 
+                             `Android OS` = os, 
+                             `Exp. 1` = exp_1, 
+                             `Exp. 2` = exp_2),
+             format = "html",
+             booktabs = TRUE,
+             caption = "TABLE 1. Mobile devices used for experimentation") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
+      
+```
+
 
 ### Missingness of data 
 
@@ -275,6 +323,9 @@ data %>%
 ```
 
 
+### Figure 4 
+
+Delay distribution per device and type of application. Percentage of missing task execution at the top (lower is better). Devices are sorted from the oldest to the newest version of Android. Green represents ad-hoc application, orange the NTD-based application.
 
 
 ```{r delay_boxplot, fig.height=5, fig.width=7, dpi=300}
