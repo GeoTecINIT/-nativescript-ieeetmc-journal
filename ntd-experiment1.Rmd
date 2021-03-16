@@ -1,10 +1,9 @@
 ---
-title: "Reproducible Package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling'"
-author:
-  - name: Alberto González, Miguel Matey, Carlos Granell, Sven Casteleyn - [SyMptOMS team](http://geotec.uji.es/projects/SyMptOMS/)
-    affiliation: [GEOTEC research group](http://geotec.uji.es/), Universitat Jaume I of Castellón, Spain
+title: "Reproducible package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling'"
+author: 
+  - Alberto González, Miguel Matey, Carlos Granell, Sven Casteleyn^[[GEOTEC research group](http://geotec.uji.es/), Universitat Jaume I of Castellón, Spain]
 date: "12/Mar/2021 (updated `r format(Sys.time(), '%d %B, %Y')`)"
-output: 
+output:
   html_document:
     df_print: paged
     number_sections: yes
@@ -15,19 +14,16 @@ output:
   pdf_document:
     toc: yes
     toc_depth: 4
-    
+
 abstract: |
-  This document analyses the reliability and scheduling performance of the self-developed library [NativeScript Task Dispatcher (NTD)](https://github.com/GeoTecINIT/nativescript-task-dispatcher) on a series of Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). The focus is on the Experiment 1 (simple task scheduling).
+  This document analyses the reliability and scheduling performance of the self-developed library [NativeScript Task Dispatcher (NTD)](https://github.com/GeoTecINIT/nativescript-task-dispatcher) in a series of Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). The focus is on the Experiment 1 (simple task scheduling).
 
-urlcolor: blue    
+urlcolor: blue
 ---
-
 
 ```{r setup, include=FALSE, eval=TRUE}
 knitr::opts_chunk$set(echo = FALSE, warning=FALSE, message=FALSE)
 ```
-
-
 
 Required libraries and runtime environment description are as follows.
 
@@ -43,7 +39,6 @@ library(gridBase)
 library(gridExtra)
 
 ```
-
 
 ```{r set_seed}
 # just in case
@@ -72,47 +67,32 @@ devices <- readr::read_csv(
 
 ```
 
-
 ```{r rawdata_files}
 
 # TODO: Delete?
-files <- tibble::tibble(
-  experiment = c(rep("#1", 4), rep("#2", 4)),
-  gsheets_name = c("AD_BQ.csv", "AD_NV.csv", "AD_A1.csv", "BA_H9.csv",
-                   "BA_BQ.csv", "BA_NV.csv", "BA_A1.csv", "AD_H9.csv")
-)
+# files <- tibble::tibble(
+#   experiment = c(rep("#1", 4), rep("#2", 4)),
+#   gsheets_name = c("AD_BQ.csv", "AD_NV.csv", "AD_A1.csv", "BA_H9.csv",
+#                    "BA_BQ.csv", "BA_NV.csv", "BA_A1.csv", "AD_H9.csv")
+# )
 
 ```
 
-# Experiment 1: simple taks scheduling
+# Experiment 1: simple task scheduling
 
-For this experiment, we deployed two applications: 1/ an ad-hoc application written in Java without an alarm watchdog, 2/ a NativeScript application that uses the NTD library. Both applications ran a simple recurrent
-task – without logic or complex computations to produce a minimal execution overhead – every minute for 2 weeks. We reused the data files generated in April/May 2020, whose file names start with the prefix `BA_` corresponds to the ad-hoc application (option 1). The data file names that start with `AD_` where created with the NTD-based application (option 2) in February 2021.
-
+For this experiment, we deployed two applications: 1/ an ad-hoc application written in Java without an alarm watchdog, 2/ a NativeScript application that uses the NTD library. Both applications ran a simple recurrent task -- without logic or complex computations to produce a minimal execution overhead -- every minute for 2 weeks. We reused the data files generated in April/May 2020, whose file names start with the prefix `BA_` corresponds to the ad-hoc application (option 1). The data file names that start with `AD_` where created with the NTD-based application (option 2) in February 2021.
 
 ## Data preparation
 
-Raw data files are cleaned and merged together into a single file stored in the folder `data`. New fields such as dates breakdown are computed too. 
+Raw data files are cleaned and merged together into a single file stored in the folder `data`. New fields such as dates breakdown are computed too.
 
 ```{r merge_datafiles_defs}
 
 schedulers <- c("AD" = "NativeScript", 
                 "BA" = "Ad-hoc")
 
-
-# devices <- c("NV" = "Nvidia Shield Tablet (Gen 1)",
-#              "BQ" = "BQ Aquaris V Plus",
-#              "A1" = "Xiaomi Mi A1",
-#              "H9" = "Honor 9 (STF-L09)")
-
-# os <- c("NV" = "7.0",
-#         "BQ" = "8.1",
-#         "A1" = "9.0",
-#         "H9" = "9.0")
-
 baseline_delay <- 60
 ```
-
 
 ```{r merge_datafiles, eval=FALSE}
 
@@ -183,7 +163,6 @@ saveRDS(data_complete, data_path)
 
 ## Analysis
 
-
 ```{r load_assessdata, warning=FALSE}
 assessment_file <- here::here("data", "data_ieeetmc.rds")
 data <- readRDS(assessment_file)
@@ -191,26 +170,31 @@ data <- readRDS(assessment_file)
 n_observations <- nrow(data) 
 
 ```
-__Key Variables__:
 
-- quantitative (interval)
-  - `plan_date` (_`r class(data$plan_date)`_): task planning time.
-  - `exec_date` (_`r class(data$exec_date)`_): task execution time.  
-  - `step`: relative position 
+Total observations: `r n_observations`
 
-- quantitative (ratio)
-  - `diff` (_`r `class(data$diff)`_): difference in seconds between the current and previous execution times.
-  - `diff_secs` (_`r class(data$diff_secs)`_): numeric value of `diff`.
-  - `delay` (_`r class(data$delay)`_): normalised execution delay in seconds (`diff_secs` - `r baseline_delay`).
+**Key Variables**:
 
-- categorical (nominal)
-  - `device_id`: device identifier
-  - `device_name`: device name
-  - `device_os`: Android OS version
-  - `scheduler`: scheduler type
+-   quantitative (interval)
 
+    -   `plan_date` (*`r class(data$plan_date)`*): task planning time.
+    -   `exec_date` (*`r class(data$exec_date)`*): task execution time.\
+    -   `step`: relative position
 
-### Table 1 
+-   quantitative (ratio)
+
+    -   `diff` (*`r`class(data\$diff)\`*): difference in seconds between the current and previous execution times.
+    -   `diff_secs` (*`r class(data$diff_secs)`*): numeric value of `diff`.
+    -   `delay` (*`r class(data$delay)`*): normalised execution delay in seconds (`diff_secs` - `r baseline_delay`).
+
+-   categorical (nominal)
+
+    -   `device_id`: device identifier
+    -   `device_name`: device name
+    -   `device_os`: Android OS version
+    -   `scheduler`: scheduler type
+
+### Table 1 (in paper)
 
 Mobile devices used for experimentation.
 
@@ -229,8 +213,7 @@ knitr::kable(devices %>%
       
 ```
 
-
-### Missingness of data 
+### Missingness of data
 
 ```{r missigness_prep}
 
@@ -245,16 +228,15 @@ data %>%
                 n_real_exec, min_plan_date, max_plan_date) -> missingness
 
 
-n_plan_exec_a1ba <- 20264
+n_plan_exec_a1ba <- 20264 # every minute, during 2 weeks
 n_plan_exec_nvba <- 20264
 ```
 
 But, *A1 with Ad-hoc* and *NV with Ad-hoc* did **not** end the experiment. The expected number of executions were
 
-- A1: `r n_plan_exec_a1ba` instead of `r filter(missingness, device_id =='A1' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
+-   A1: `r n_plan_exec_a1ba` instead of `r filter(missingness, device_id =='A1' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
 
-- NV: `r n_plan_exec_nvba` instead of `r filter(missingness, device_id =='NV' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
-
+-   NV: `r n_plan_exec_nvba` instead of `r filter(missingness, device_id =='NV' & scheduler=='Ad-hoc') %>% select(n_plan_exec) %>% .$n_plan_exec`.
 
 ```{r missigness_update}
 missingness[1,c("n_plan_exec")] <- n_plan_exec_a1ba
@@ -298,9 +280,9 @@ missingness_means <-
 knitr::kable(missingness_means, 
              format = "html",
              booktabs = TRUE,
-             caption = "Average Missingness of data per type of scheduler.")
+             caption = "Average Missingness of data per type of scheduler.") %>%
+    kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("striped", "bordered", "condensed"))
 ```
-
 
 ### Performance
 
@@ -313,7 +295,7 @@ data %>%
 
 ```
 
-We discard `r nrow(outliers)` out of `r n_observations` observations whose abs(delay) >= `r limit_secs` seconds.
+We discard `r nrow(outliers)` out of `r n_observations` observations whose abs(delay) \>= `r limit_secs` seconds.
 
 ```{r delay_dataout}
 
@@ -322,11 +304,9 @@ data %>%
   dplyr::select(scheduler, device_id, device_name, device_os, delay) -> performance
 ```
 
-
-### Figure 4 
+### Figure 4
 
 Delay distribution per device and type of application. Percentage of missing task execution at the top (lower is better). Devices are sorted from the oldest to the newest version of Android. Green represents ad-hoc application, orange the NTD-based application.
-
 
 ```{r delay_boxplot, fig.height=5, fig.width=7, dpi=300}
 
@@ -350,13 +330,12 @@ performance %>%
   scale_x_discrete(limits=devices_ordered) +
   scale_y_continuous(breaks=seq(-10,10,2)) +
   scale_color_brewer(palette = "Dark2") +
-  # scale_color_brewer(palette = "Paired") +
   # scale_color_grey(start = 0, end = 0.5) +
   
-  geom_label(data = missingness_advanced, aes(x = device_id, y = 10, label = percent),
+  geom_label(data = missingness_advanced, aes(x = device_id, y = 10, label = percent_lbl),
             color="#D95F02",
             size=4, nudge_y= 0.5,nudge_x = 0.2) +
-  geom_label(data = missingness_basic, aes(x = device_id, y = 10, label = percent),
+  geom_label(data = missingness_basic, aes(x = device_id, y = 10, label = percent_lbl),
             color="#1B9E77", 
             size=4, nudge_y= 0.5,nudge_x = -0.2) +
   
@@ -380,9 +359,6 @@ ggplot2::ggsave(plot = p, filename = here::here("figs", "fig_boxplot.png"),
                width = 7, height = 5, dpi = 300)
 
 ```
-
-
-
 
 ```{r delay_histogram, fig.height=14, fig.width=10,  warning=FALSE, message=FALSE}
 
@@ -409,6 +385,3 @@ p <- p + ggplot2::annotation_logticks(sides = "l")
 p
 
 ```
-
-
-
