@@ -25,10 +25,11 @@ RUN chown -R ${NB_USER} ${HOME}
 # Become normal user again
 USER ${NB_USER}
 
+
 # --- Metadata ---
 LABEL maintainer="carlos.granell@uji.es" \
   Name="NTD in IEEE TMC journal - computing environment" \
-  Version="2" \
+  Version="1" \
   org.opencontainers.image.created="2021-03" \
   org.opencontainers.image.authors="Carlos Granell" \
   org.opencontainers.image.url="https://github.com/GeoTecINIT/nativescript-ieeetmc-journal/blob/master/Dockerfile" \
