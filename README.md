@@ -15,16 +15,20 @@ DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4032875.svg)](https://doi.org/1
 ## Reproduce online
 
 Click the “Binder” button below to open an interactive editing environment with all required software installed on
-[MyBinder.org](https://mybinder.org/). It uses the current version of the branch `master` in the repository, but you can also enter the Zenodo DOI (see above) in the MyBinder user interface to open a preserved release version.
+[MyBinder.org](https://mybinder.org/). It uses the current version of the branch `main` in the repository, but you can also enter the Zenodo DOI (see above) in the MyBinder user interface to open a preserved release version.
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/GeoTecINIT/nativescript-ieeetmc-journal/main?urlpath=rstudio)
 
-You can start RStudio for the analysis via “New \> RStudio”. You can navigate to the R Markdown notebook file (see [list of files below](#files-in-this-repository)) to inspect and reproduce the table and figure as described in [Reproduce analysis](#reproduce-analysis), except that local installation of required packages is not required.
+You can start RStudio for the analysis via “New \> RStudio”. You can navigate to the R Markdown notebook file (see [list of files below](#files-in-this-repository)) to inspect the code and reproduce (“Knit \> Knit to HTML”) the table and figure as described in [Reproduce analysis](#reproduce-analysis), except that local installation of required packages is not required.
 
 ## Reproduce analysis
 
+Open the R Markdown file (`ntd-experiment1.Rmd`) with RStudio. Then select “Knit > Knit to HTML” to render the web page. If you have errors rendering the HTML page, try running each chunk to locate the problem. This analysis does not convert raw datasets into processed data for the analysis - please execute the chunk `merge_datafiles` manually if necessary.
+
+The R Markdown file does not include code to install required packages. Run the code in the file `install.R` to install all dependencies.
 
 ## Reproduce locally with Docker
+
 
 ## Files in this repository
 
