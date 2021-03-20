@@ -41,14 +41,11 @@ LABEL maintainer="carlos.granell@uji.es" \
 ## Build the image
 # $ docker build --tag rr-ntd-ieeetmc .
 #
+## Build the image wirth jupyter-repo2docker
+# $ jupyter-repo2docker --image-name=rr-ntd-ieeetmc .
+#
 ## Run the image for interactive UI
 # $ docker run -it -p 8888:8888 rr-ntd-ieeetmc
 # Next, open a browser at http://localhost:8888 or click on the login link shown in the console.
 # It will show the Jupyter start page and you can now open RStudio via the menu "New".
-#
-## Run the image to render the europe map analysis (linux)
-# $ docker run --interative --volume $(pwd):/ntd --user $UID rr-ntd-ieeetmc Rscript -e 'setwd("/ntd"); rmarkdown::render("ntd_experiment1.Rmd")'
-
-## Run the image to render the europe map analysis (on Window PowerShell)
-# $ docker run --interative --volume ${PWD}:/ntd --user $UID rr-ntd-ieeetmc Rscript -e 'setwd("/ntd"); rmarkdown::render("ntd_experiment1.Rmd")'
 

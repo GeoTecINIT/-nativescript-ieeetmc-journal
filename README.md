@@ -29,6 +29,11 @@ The R Markdown file does not include code to install required packages. Run the 
 
 ## Reproduce locally with Docker
 
+Install [Docker CE](https://www.docker.com/community-edition) or a compatible tool for building an image based on a `Dockerfile` and running a container based on the image. The `Dockerfile` uses the Rocker image [`rocker/binder:3.6.3`](https://hub.docker.com/r/rocker/binder), providing R version `3.6.3` with a CRAN mirror timestamp of July 5th 2019.
+
+Download the project files, open a command line in the root directory (where this file is), and run the commands as documented at the end of the `Dockerfile` file.
+
+If you have [`repo2docker`](https://repo2docker.readthedocs.io), you can also run `repo2docker --image-name=rr-ntd-ieeetmc .`  *The `repo2docker` option is the only way the original authors worked on the analysis to ensure the computing environment is properly managed.* 
 
 ## Files in this repository
 
