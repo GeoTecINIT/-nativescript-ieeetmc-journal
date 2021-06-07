@@ -1,5 +1,5 @@
 ---
-title: "Reproducible package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling'"
+title: "Reproducible package for 'Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling' - Experiment 1"
 author: 
   - Alberto González, [GEOTEC research group](http://geotec.uji.es/), Universitat Jaume I of Castellón, Spain] 
   - Miguel Matey, [GEOTEC research group](http://geotec.uji.es/), Universitat Jaume I of Castellón, Spain]
@@ -51,7 +51,7 @@ set.seed(nchar("Reproducible Package for 'Using mobile Devices as Scientific Mea
 
 ```{r rawdata_devices}
 
-devices_file <- here::here("data", "devices.csv")
+devices_file <- here::here("exp1", "data", "devices.csv")
 
 cols(
    .default = readr::col_character(),
@@ -71,7 +71,7 @@ devices <- readr::read_csv(
 
 ```
 
-As reported in the paper, we deployed two applications to run the the Experiment 1 (simple task scheduling): 1/ an ad-hoc application written in Java without an alarm watchdog, 2/ a NativeScript application that uses the NTD library. Both applications ran a simple recurrent task -- without logic or complex computations to produce a minimal execution overhead -- every minute for 2 weeks. We reused the data files generated in April/May 2020, whose file names start with the prefix `BA_` corresponds to the ad-hoc application (option 1). The data file names that start with `AD_` where created with the NTD-based application (option 2) in February 2021.
+As reported in the paper, we deployed two applications to run the Experiment 1 (simple task scheduling): 1/ an ad-hoc application written in Java without an alarm watchdog, 2/ a NativeScript application that uses the NTD library. Both applications ran a simple recurrent task -- without logic or complex computations to produce a minimal execution overhead -- every minute for 2 weeks. We reused the data files generated in April/May 2020, whose file names start with the prefix `BA_` corresponds to the ad-hoc application (option 1). The data file names that start with `AD_` where created with the NTD-based application (option 2) in February 2021.
 
 # Data preparation
 
@@ -85,7 +85,7 @@ baseline_delay <- 60
 
 ```{r merge_datafiles, eval=FALSE}
 
-data_path <- here::here("data-raw")
+data_path <- here::here("exp1", "data-raw")
 file_names <- list.files(path = data_path)
 file_paths <- list.files(path = data_path, full.names = TRUE)
 
@@ -143,23 +143,23 @@ data_complete <-
          delay = diff_secs - baseline_delay)
       
 
-data_path <- here::here("data", "data_ieeetmc.csv")
+data_path <- here::here("exp1", "data", "data_ieeetmc.csv")
 write_csv(data_complete, data_path)
-data_path <- here::here("data", "data_ieeetmc.rds")
+data_path <- here::here("exp1", "data", "data_ieeetmc.rds")
 saveRDS(data_complete, data_path)
 
 ```
 
 
 ```{r load_assessdata, warning=FALSE}
-assessment_file <- here::here("data", "data_ieeetmc.rds")
+assessment_file <- here::here("exp1", "data", "data_ieeetmc.rds")
 data <- readRDS(assessment_file)
 
 n_observations <- nrow(data) 
 
 ```
 
-Raw data files are cleaned and merged together into a single file `data/data_ieeetmc`. Total observations: `r n_observations`. Key variables, as explained below, are computed too.
+Raw data files are cleaned and merged together into a single file `exp1/data/data_ieeetmc`. Total observations: `r n_observations`. Key variables, as explained below, are computed too.
 
 - quantitative (interval)
 
@@ -349,7 +349,7 @@ performance %>%
 
 p
 
-ggplot2::ggsave(plot = p, filename = here::here("figs", "fig_boxplot.png"), 
+ggplot2::ggsave(plot = p, filename = here::here("exp1", "figs", "fig_boxplot.png"), 
                width = 7, height = 5, dpi = 300)
 
 ```
