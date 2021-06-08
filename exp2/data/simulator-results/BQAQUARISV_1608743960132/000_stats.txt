@@ -1,0 +1,4 @@
+Experiment REACTIVITY started on 2020-12-23T17:19:20.132Z and finished on 2021-01-07T17:00:45.557Z.
+-Scheduled iterations = 470
+-Successful iterations = 470
+-Unsuccessful iterations = 0

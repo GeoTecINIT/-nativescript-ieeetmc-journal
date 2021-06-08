@@ -1,0 +1,12 @@
+{
+      "checkAreaOfInterestProximity#movedCloseToAreaOfInterest": 1,
+      "checkAreaOfInterestProximity#movedInsideAreaOfInterest": 1,
+      "startExposure#exposureStarted": 1,
+      "sendFakeMessage#sendFakeMessageFinished": 2,
+      "acquireFakeQuestionnaireAnswers#questionnaireAnswersAcquired": 12,
+      "processExposureAnswers#emotionLevelAcquired": 12,
+      "processEmotionLevel#processEmotionLevelTaskFinished": 11,
+      "processEmotionLevel#exposureFinished": 1,
+      "checkAreaOfInterestProximity#movedOutsideAreaOfInterest": 1,
+      "checkAreaOfInterestProximity#movedAwayFromAreaOfInterest": 1
+}

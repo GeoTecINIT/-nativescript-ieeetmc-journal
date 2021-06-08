@@ -1,0 +1,37 @@
+[
+    {
+        "name": "checkAreaOfInterestProximity",
+        "emitted": ["movedCloseToAreaOfInterest", "movedInsideAreaOfInterest", "movedOutsideAreaOfInterest", "movedAwayFromAreaOfInterest"],
+        "invokedBy": ["geolocationAcquired"]
+    },
+    {
+        "name": "startExposure",
+        "emitted": ["exposureStarted"],
+        "invokedBy": ["movedInsideAreaOfInterest"]
+    },
+    {
+        "name": "sendFakeMessage",
+        "emitted": ["sendFakeMessageFinished"],
+        "invokedBy": ["exposureStarted", "exposureSuccessfullyFinished"]
+    },
+    {
+        "name": "acquireFakeQuestionnaireAnswers",
+        "emitted": ["questionnaireAnswersAcquired"],
+        "invokedBy": ["taskExecutionStarted"]
+    },
+        {
+        "name": "processExposureAnswers",
+        "emitted": ["emotionLevelAcquired"],
+        "invokedBy": ["questionnaireAnswersAcquired"]
+    },
+        {
+        "name": "processEmotionLevel",
+        "emitted": ["processEmotionLevelTaskFinished", "exposureFinished"],
+        "invokedBy": ["emotionLevelAcquired"]
+    },
+        {
+        "name": "processExposureExitContidition",
+        "emitted": ["exposureSuccessfullyFinished"],
+        "invokedBy": ["exposureFinished"]
+    }
+]
