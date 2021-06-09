@@ -385,7 +385,34 @@ p
 
 # Results (Update)
 
-Based on one comment from a reviewer, we compute a new variable, **overhead**, as the difference between consecutive `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by its complexity.
+Based on one comment from a reviewer, we compute a new variable, **overhead**, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
+
+- Instructions between [] do not count towards the **overhead** calculation or whose overhead cannot be calculated because they are executed before the `planning_timestamp` and after the `exec_timestamp`.
+
+- Instructions starting with #1, #2 and #3() _do_ affect the **overhead**:
+  - #1 are the instructions related to the acquisition and  storage of the `planning_timestamp`.
+  - #2 are the instructions which happen between `planning_timestamp` and `exec_timestamp` acquisition.
+  - #3 are the instructions related to the acquisition of the `exec_timestamp`.
+
+Therefore, the NTD computes:
+
+- [obtain next tasks to run from DB, calculate minimum interval and schedule next alarm] 
+- #1 store `planning_timestamp` for next alarm trigger
+- #2 obtain tasks to run now, calculate if service has to run in background or foreground, run the service, obtain tasks to run again (different context), build up task execution chains, trigger task chains.
+- #3 store `exec_timestamp`
+- [run first task of the first chain, second task, etc.]
+
+The ad-hoc application computes:
+
+- [schedule next alarm] 
+- #1 store `planning_timestamp` for next alarm trigger
+- #2 run the service, control that only one task is being executed at once) 
+- #3 store `exec_timestamp` 
+- [run task]
+
+
+In both cases #2 group, encompasses all the instructions being run between the storage of the `planning_timestamp` of the next alarm and the storage of the `execution_timestamp` of the actual task. NTD encompases a lot more instructions than the ad-hoc application.
+
 
 ```{r overhead_dataprep, warning=FALSE}
 
