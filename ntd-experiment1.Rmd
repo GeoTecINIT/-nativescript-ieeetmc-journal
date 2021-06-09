@@ -385,14 +385,12 @@ p
 
 # Results (Update)
 
-Based on one comment from a reviewer, we compute a new variable, **overhead**, as the difference between consecutive `plan_date`. 
-
+Based on one comment from a reviewer, we compute a new variable, **overhead**, as the difference between consecutive `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by its complexity.
 
 ```{r overhead_dataprep, warning=FALSE}
 
 data %>%
-  filter(device_id %in% c("H9", "BQ")) %>%
-  select(-exec_timestamp, -planning_timestamp) -> overhead
+  filter(device_id %in% c("H9", "BQ")) -> overhead
 
 
 # Remove duplicated row by "plan_date" and keep the first occurrance
@@ -408,36 +406,50 @@ overhead <-
   overhead %>%
   group_by(device_id, scheduler) %>%
   arrange(plan_date) %>%
-  mutate(overhead_diff = plan_date - dplyr::lag(plan_date),
-         overhead_diff_secs = as.numeric(overhead_diff, units = "secs"),
-         overhead_delay = overhead_diff_secs - baseline_delay)
+  mutate(task_execution_delay = exec_timestamp - dplyr::lead(planning_timestamp))
 
 
 overhead %>%
-  tidyr::drop_na(overhead_delay) %>%
-  dplyr::group_by(device_id, scheduler) %>%
-  dplyr::summarise(overhead_min = min(overhead_delay),
-                   overhead_q1 = quantile(overhead_delay, .25, ),
-                   overhead_median = median(overhead_delay),
-                   overhead_q3 = quantile(overhead_delay, .75),
-                   overhead_max = max(overhead_delay),
-                   overhead_sd = sd(overhead_delay)) -> overhead_summaries
+  tidyr::drop_na(task_execution_delay) %>%
+  filter(task_execution_delay > 0) %>%
+  filter(task_execution_delay < 2000) -> overhead_clean
 
 ```
 
-
-
 ```{r overhead_table, echo=TRUE}
-# knitr::kable(overhead_summaries)
+overhead_clean %>%
+  dplyr::group_by(device_id, scheduler) %>%
+  dplyr::summarise(task_execution_delay_min = min(task_execution_delay),
+                   task_execution_delay_q1 = quantile(task_execution_delay, .25, ),
+                   task_execution_delay_median = median(task_execution_delay),
+                   task_execution_delay_q3 = quantile(task_execution_delay, .75),
+                   task_execution_delay_max = max(task_execution_delay),
+                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries
 
 knitr::kable(overhead_summaries,
              format = "html",
              booktabs = TRUE,
-             caption = "TABLE. Overhead comparison (unit: seconds)") %>%
+             caption = "TABLE. Overhead comparison (unit: milliseconds)") %>%
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
       
 ```
 
+```{r overhead_per_scheduler_table, echo=TRUE}
+overhead_clean %>%
+  dplyr::group_by(scheduler) %>%
+  dplyr::summarise(task_execution_delay_min = min(task_execution_delay),
+                   task_execution_delay_q1 = quantile(task_execution_delay, .25, ),
+                   task_execution_delay_median = median(task_execution_delay),
+                   task_execution_delay_q3 = quantile(task_execution_delay, .75),
+                   task_execution_delay_max = max(task_execution_delay),
+                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries_per_scheduler
+
+knitr::kable(overhead_summaries_per_scheduler,
+             format = "html",
+             booktabs = TRUE,
+             caption = "TABLE. Overhead per scheduler comparison (unit: milliseconds)") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
+```
 
 
 
