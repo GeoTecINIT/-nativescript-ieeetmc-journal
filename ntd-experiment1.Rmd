@@ -385,7 +385,7 @@ p
 
 # Results (Update)
 
-Based on one comment from a reviewer, we compute a new variable, **overhead**, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
+Based on one comment from a reviewer, we compute a new variable, **overhead** or `task_execution_delay`, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
 
 - Instructions between [] do not count towards the **overhead** calculation or whose overhead cannot be calculated because they are executed before the `planning_timestamp` and after the `exec_timestamp`.
 
@@ -411,7 +411,7 @@ The ad-hoc application computes:
 - [run task]
 
 
-In both cases #2 group, encompasses all the instructions being run between the storage of the `planning_timestamp` of the next alarm and the storage of the `execution_timestamp` of the actual task. NTD encompases a lot more instructions than the ad-hoc application.
+In both cases #2 group, encompasses all the instructions being run between the storage of the `planning_timestamp` of the next alarm and the storage of the `execution_timestamp` of the actual task. NTD encompasses a lot more instructions than the ad-hoc application.
 
 
 ```{r overhead_dataprep, warning=FALSE}
@@ -438,8 +438,7 @@ overhead <-
 
 overhead %>%
   tidyr::drop_na(task_execution_delay) %>%
-  filter(task_execution_delay > 0) %>%
-  filter(task_execution_delay < 2000) -> overhead_clean
+  filter(task_execution_delay > 0 & task_execution_delay < 2000) -> overhead_clean
 
 ```
 
@@ -447,16 +446,16 @@ overhead %>%
 overhead_clean %>%
   dplyr::group_by(device_id, scheduler) %>%
   dplyr::summarise(task_execution_delay_min = min(task_execution_delay),
-                   task_execution_delay_q1 = quantile(task_execution_delay, .25, ),
+                   task_execution_delay_q1 = quantile(task_execution_delay, .25),
                    task_execution_delay_median = median(task_execution_delay),
                    task_execution_delay_q3 = quantile(task_execution_delay, .75),
                    task_execution_delay_max = max(task_execution_delay),
                    task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries
 
-knitr::kable(overhead_summaries,
+knitr::kable(t(overhead_summaries),
              format = "html",
              booktabs = TRUE,
-             caption = "TABLE. Overhead comparison (unit: milliseconds)") %>%
+             caption = "TABLE. Overhead comparison by device & scheduler (unit: ms)") %>%
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
       
 ```
@@ -469,12 +468,12 @@ overhead_clean %>%
                    task_execution_delay_median = median(task_execution_delay),
                    task_execution_delay_q3 = quantile(task_execution_delay, .75),
                    task_execution_delay_max = max(task_execution_delay),
-                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries_per_scheduler
+                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries_scheduler
 
-knitr::kable(overhead_summaries_per_scheduler,
+knitr::kable(t(overhead_summaries_scheduler),
              format = "html",
              booktabs = TRUE,
-             caption = "TABLE. Overhead per scheduler comparison (unit: milliseconds)") %>%
+             caption = "TABLE. Overhead comparison per scheduler only (unit: ms)") %>%
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
 ```
 
