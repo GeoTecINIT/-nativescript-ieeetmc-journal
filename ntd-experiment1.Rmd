@@ -127,7 +127,7 @@ for (f in 1:length(file_names)) {
 
 data_merged <- 
   data_merged %>%
-  select(-task, -battery) %>%
+  select(-task) %>%
   mutate(exec_date = as_datetime(exec_timestamp/1000, tz="Europe/Madrid"),
          plan_date = as_datetime(planning_timestamp/1000, tz="Europe/Madrid"))
          
@@ -385,6 +385,8 @@ p
 
 # Results (Update)
 
+## Overhead
+
 Based on one comment from a reviewer, we compute a new variable, **overhead** or `task_execution_delay`, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
 
 - Instructions between [] do not count towards the **overhead** calculation or whose overhead cannot be calculated because they are executed before the `planning_timestamp` and after the `exec_timestamp`.
@@ -477,5 +479,50 @@ knitr::kable(t(overhead_summaries_scheduler),
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
 ```
 
+## Battery level
 
+
+```{r battery_dataprep, warning=FALSE}
+
+data %>%
+  filter(device_id %in%  c("H9", "BQ")) -> battery_data
+
+
+battery_data <- 
+  battery_data %>%
+  mutate(plan_hour = lubridate::hour(plan_date),
+         plan_day = lubridate::day(plan_date),
+         plan_month = lubridate::month(plan_date))
+
+battery_data %>%
+  group_by(plan_month, plan_day, plan_hour, device_id, scheduler) %>%
+  arrange(step) %>%
+  dplyr::slice_head(n=1)  %>%
+  ungroup() %>%
+  mutate(bin = row_number()) %>%
+  select(bin, plan_month, plan_day, plan_hour, battery, device_id, scheduler)  -> head_bin
+
+```
+
+```{r battery_plot, warning=FALSE, echo=TRUE}
+
+head_bin %>%
+  arrange(bin) %>%
+  ggplot(aes(x=bin, y=battery, color=device_id)) +
+  ggplot2::labs(title = "First reading of battery level per hour (1 hour = 1 bin)") +
+  ggplot2::geom_line(size = 0.5) +
+  ggplot2::facet_wrap(device_id ~ scheduler)
+
+```
+
+```{r battery_offset_plot, warning=FALSE, echo=TRUE}
+head_bin %>%
+  arrange(bin) %>%
+  mutate(battery_offset = abs(battery - lead(battery))) %>%
+  ggplot(aes(x=bin, y=battery_offset, color=device_id)) +
+  ggplot2::labs(title = "Battery offset (last - first reading) per hour (1 hour = 1 bin)") +
+  ggplot2::geom_line(size = 0.5) +
+  ggplot2::facet_wrap(device_id ~ scheduler)
+        
+```
 
