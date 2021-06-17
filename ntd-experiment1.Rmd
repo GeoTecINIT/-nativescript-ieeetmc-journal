@@ -512,9 +512,12 @@ Ad-hoc's average performance is `r overhead_summaries_scheduler$task_execution_d
 ## Battery level
 
 
-We look here if energy consumption is a barrier for the NTD application, compared to the less resource-demanding ad-hoc application. Again, we focues here only on the BQ and H9 devices that successfully completed the experiment.
+We look here if energy consumption is a barrier for the NTD application, compared to the less resource-demanding ad-hoc application. Again, we focus here only on the BQ and H9 devices that successfully completed the experiment.
 
 
+### Battery level per 1-hour bin 
+
+We computed battery level for each 1-hour bin, by selecting the first reading of the battery level in each hour. The plot below shows that the H9 device was also used for personal usage while executing the experiment of the Ad-hoc application. Therefore, we discard it and focus our attention on the BQ device, which was only used for experimentation.                 
 
 ```{r battery_dataprep, warning=FALSE}
 
@@ -550,23 +553,46 @@ head_bin %>%
 
 ```
 
+### BQ's battery level offset
+
 ```{r battery_offset_plot, warning=FALSE, echo=TRUE}
-head_bin %>%
-  arrange(bin) %>%
-  mutate(battery_offset = battery - lead(battery)) %>%
-  filter(battery_offset >= 0, device_id == "BQ") %>%
-  group_by(device_id, scheduler) %>%
-  summarise(mean_offset = mean(battery_offset, na.rm=T))
 
-
-head_bin %>%
+head_bin %>% 
+  filter(device_id == "BQ") %>%
   arrange(bin) %>%
-  mutate(battery_offset = battery - lead(battery)) %>%
-  filter(battery_offset >= 0, device_id == "BQ") %>%
-  ggplot(aes(x=bin, y=battery_offset, color=device_id)) +
-  ggplot2::labs(title = "Battery offset (last - first reading) per hour (1 hour = 1 bin)") +
+  mutate(battery_offset = battery - lead(battery)) -> head_bin_bq
+
+head_bin_bq %>%
+  ggplot(aes(x=bin, y=battery_offset, color=scheduler)) +
+  ggplot2::labs(title = "Battery offset (last - first reading) computed by hour (1 hour = 1 bin)") +
   ggplot2::geom_line(size = 0.5) +
-  ggplot2::facet_wrap(scheduler ~ device_id)
+  ggplot2::facet_wrap(~ scheduler)
+
+head_bin_bq %>%
+  filter(battery_offset >= 0) %>%
+  ggplot(aes(x=bin, y=battery_offset, color=scheduler)) +
+  ggplot2::labs(title = "Battery offset (last - first reading) > 0 computed by hour (1 hour = 1 bin)") +
+  ggplot2::geom_line(size = 0.5) +
+  ggplot2::facet_wrap(~ scheduler)
+
+```
+
+```{r battery_offset_summaries, warning=FALSE, echo=TRUE}
+
+head_bin_bq %>%
+  filter(battery_offset >= 0) %>%
+  group_by(device_id, scheduler) %>%
+  summarise(
+    offset_mean = round(mean(battery_offset, na.rm=T), 1),
+    offet_sd = round(sd(battery_offset, na.rm=T), 2)) -> head_bin_bq_summaries
+
+
+
+knitr::kable(t(head_bin_bq_summaries),
+             format = "html",
+             booktabs = TRUE,
+             caption = "TABLE. BQ' battery usage offset") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
         
 ```
 
