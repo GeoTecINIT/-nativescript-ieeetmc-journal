@@ -1539,7 +1539,7 @@ head_bin_bq %&gt;%
   filter(battery_offset &gt;= 0) %&gt;%
   group_by(device_id, scheduler) %&gt;%
   summarise(
-    offset_mean = round(mean(battery_offset, na.rm=T), 1),
+    offset_mean = round(mean(battery_offset, na.rm=T), 2),
     offet_sd = round(sd(battery_offset, na.rm=T), 2)) -&gt; head_bin_bq_summaries
 
 
@@ -1581,10 +1581,10 @@ NativeScript
 offset_mean
 </td>
 <td style="text-align:left;">
-0.3
+0.31
 </td>
 <td style="text-align:left;">
-0.4
+0.40
 </td>
 </tr>
 <tr>
@@ -1600,6 +1600,7 @@ offet_sd
 </tr>
 </tbody>
 </table>
+<p>Above plots remark that battery level offset is almost identical between the ad-hoc and NTD applications. On average, the NTD application uses 0.09 more battery than the ad-hoc per hour. As a relative percentage, NTD uses 29% more battery per hour than ad-hoc application. While percentage may look remarkable, it refers to tiny fractions of battery usage (&lt; 0.1% per hour) .</p>
 </div>
 </div>
 </div>

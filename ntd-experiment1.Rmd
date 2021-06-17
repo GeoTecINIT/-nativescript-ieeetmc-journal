@@ -583,7 +583,7 @@ head_bin_bq %>%
   filter(battery_offset >= 0) %>%
   group_by(device_id, scheduler) %>%
   summarise(
-    offset_mean = round(mean(battery_offset, na.rm=T), 1),
+    offset_mean = round(mean(battery_offset, na.rm=T), 2),
     offet_sd = round(sd(battery_offset, na.rm=T), 2)) -> head_bin_bq_summaries
 
 
@@ -595,4 +595,6 @@ knitr::kable(t(head_bin_bq_summaries),
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
         
 ```
+
+Above plots remark that battery level offset is almost identical between the ad-hoc and NTD applications. On average, the NTD application uses `r head_bin_bq_summaries$offset_mean[2] - head_bin_bq_summaries$offset_mean[1]` more battery than the ad-hoc per hour. As a relative percentage, NTD uses `r percent(abs(1 - head_bin_bq_summaries$offset_mean[2] / head_bin_bq_summaries$offset_mean[1]))` more battery per hour than ad-hoc application. While percentage may look remarkable, it refers to tiny fractions of battery usage (< 0.1% per hour) .
 
