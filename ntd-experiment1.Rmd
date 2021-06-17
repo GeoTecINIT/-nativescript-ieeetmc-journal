@@ -413,7 +413,7 @@ The ad-hoc application computes:
 - [run task]
 
 
-In both cases #2 group, encompasses all the instructions being run between the storage of the `planning_timestamp` of the next alarm and the storage of the `execution_timestamp` of the actual task. NTD encompasses a lot more instructions than the ad-hoc application.
+In both cases, #2 represents the instructions being run between the storage of the `planning_timestamp` of the next alarm and the storage of the `execution_timestamp` of the actual task. NTD encompasses a lot more instructions than the ad-hoc application.
 
 
 ```{r overhead_dataprep, warning=FALSE}
@@ -440,9 +440,30 @@ overhead <-
 
 overhead %>%
   tidyr::drop_na(task_execution_delay) %>%
-  filter(task_execution_delay > 0 & task_execution_delay < 2000) -> overhead_clean
+  filter(task_execution_delay > 0, task_execution_delay < 2000) -> overhead_clean
 
 ```
+
+```{r overhead_values_dropped}
+
+drop <- anti_join(overhead, overhead_clean) %>% select(device_id, scheduler, task_execution_delay)
+
+n_drop = nrow(drop)
+
+```
+Values of `task_execution_delay` lesser than 2000 ms are retained for the analysis. In consequence, `r n_drop` are dropped due to invalid values of `task_execution_delay` as follows.
+
+```{r overhead_values_dropped_table}
+
+knitr::kable(drop,
+             format = "html",
+             booktabs = TRUE,
+             caption = "TABLE. Dropped values") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
+
+```
+
+
 
 ```{r overhead_table, echo=TRUE}
 overhead_clean %>%
@@ -450,9 +471,10 @@ overhead_clean %>%
   dplyr::summarise(task_execution_delay_min = min(task_execution_delay),
                    task_execution_delay_q1 = quantile(task_execution_delay, .25),
                    task_execution_delay_median = median(task_execution_delay),
+                   task_execution_delay_mean = round(mean(task_execution_delay), 1),
                    task_execution_delay_q3 = quantile(task_execution_delay, .75),
                    task_execution_delay_max = max(task_execution_delay),
-                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries
+                   task_execution_delay_sd = round(sd(task_execution_delay), 1)) -> overhead_summaries
 
 knitr::kable(t(overhead_summaries),
              format = "html",
@@ -468,9 +490,10 @@ overhead_clean %>%
   dplyr::summarise(task_execution_delay_min = min(task_execution_delay),
                    task_execution_delay_q1 = quantile(task_execution_delay, .25, ),
                    task_execution_delay_median = median(task_execution_delay),
+                   task_execution_delay_mean = round(mean(task_execution_delay), 1),
                    task_execution_delay_q3 = quantile(task_execution_delay, .75),
                    task_execution_delay_max = max(task_execution_delay),
-                   task_execution_delay_sd = sd(task_execution_delay)) -> overhead_summaries_scheduler
+                   task_execution_delay_sd = round(sd(task_execution_delay), 1)) -> overhead_summaries_scheduler
 
 knitr::kable(t(overhead_summaries_scheduler),
              format = "html",
@@ -478,6 +501,9 @@ knitr::kable(t(overhead_summaries_scheduler),
              caption = "TABLE. Overhead comparison per scheduler only (unit: ms)") %>%
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
 ```
+
+Ad-hoc's average performance is `r overhead_summaries_scheduler$task_execution_delay_mean[1]` ms (sd = `r overhead_summaries_scheduler$task_execution_delay_sd[1]` ms), while NTD's is `r overhead_summaries_scheduler$task_execution_delay_mean[2]` ms (sd = `r overhead_summaries_scheduler$task_execution_delay_sd[2]` ms). On average, there is a __tiny performance penalty of `r overhead_summaries_scheduler$task_execution_delay_mean[2] - overhead_summaries_scheduler$task_execution_delay_mean[1]` ms against the NTD application__.
+
 
 ## Battery level
 
@@ -495,10 +521,11 @@ battery_data <-
          plan_month = lubridate::month(plan_date))
 
 battery_data %>%
-  group_by(plan_month, plan_day, plan_hour, device_id, scheduler) %>%
+  group_by(device_id, scheduler, plan_month, plan_day, plan_hour) %>%
   arrange(step) %>%
   dplyr::slice_head(n=1)  %>%
   ungroup() %>%
+  group_by(device_id, scheduler) %>%
   mutate(bin = row_number()) %>%
   select(bin, plan_month, plan_day, plan_hour, battery, device_id, scheduler)  -> head_bin
 
@@ -511,18 +538,27 @@ head_bin %>%
   ggplot(aes(x=bin, y=battery, color=device_id)) +
   ggplot2::labs(title = "First reading of battery level per hour (1 hour = 1 bin)") +
   ggplot2::geom_line(size = 0.5) +
-  ggplot2::facet_wrap(device_id ~ scheduler)
+  ggplot2::facet_wrap(scheduler ~ device_id )
 
 ```
 
 ```{r battery_offset_plot, warning=FALSE, echo=TRUE}
 head_bin %>%
   arrange(bin) %>%
-  mutate(battery_offset = abs(battery - lead(battery))) %>%
+  mutate(battery_offset = battery - lead(battery)) %>%
+  filter(battery_offset >= 0, device_id == "BQ") %>%
+  group_by(device_id, scheduler) %>%
+  summarise(mean_offset = mean(battery_offset, na.rm=T))
+
+
+head_bin %>%
+  arrange(bin) %>%
+  mutate(battery_offset = battery - lead(battery)) %>%
+  filter(battery_offset >= 0, device_id == "BQ") %>%
   ggplot(aes(x=bin, y=battery_offset, color=device_id)) +
   ggplot2::labs(title = "Battery offset (last - first reading) per hour (1 hour = 1 bin)") +
   ggplot2::geom_line(size = 0.5) +
-  ggplot2::facet_wrap(device_id ~ scheduler)
+  ggplot2::facet_wrap(scheduler ~ device_id)
         
 ```
 
