@@ -201,7 +201,9 @@ knitr::kable(devices %>%
       
 ```
 
-## Missingness of data
+## Reliability 
+
+### Missingness of data
 
 We compute the data loss ratio, i.e. the expected number of task executions against the real one. 
 
@@ -273,7 +275,7 @@ knitr::kable(missingness_means %>%
     kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("striped", "bordered", "condensed"))
 ```
 
-## Outliers
+### Outliers
 
 
 ```{r}
@@ -294,7 +296,7 @@ data %>%
   dplyr::select(scheduler, device_id, device_name, device_os, delay) -> performance
 ```
 
-## Figure 4 (included in the paper)
+### Figure 4 (included in the paper)
 
 `Delay` distribution per device and type of application. Percentage of missing task executions at the top (lower is better). Devices are sorted from the oldest to the newest version of Android. Green represents ad-hoc application, orange the NTD-based application.
 
@@ -354,7 +356,7 @@ ggplot2::ggsave(plot = p, filename = here::here("exp1", "figs", "fig_boxplot.png
 
 ```
 
-## Histogram
+### Histogram
 
 Log scale distribution of `Delay` only for devices *BQ* and *H9*.
 
@@ -383,11 +385,9 @@ p
 
 ```
 
-# Results (Update)
+## Performance overhead
 
-## Overhead
-
-Based on one comment from a reviewer, we compute a new variable, **overhead** or `task_execution_delay`, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
+To dig deeper into the scheduling performance of the BQ and H9 devices that successfully completed the experiment, we computed a new variable, **overhead** or `task_execution_delay`, as the difference between `exec_timestamp(n) - planning_timestamp(n+1)`. Due to the fact that `planning_timestamp(n+1)` is computed in the `n` task execution, this computation can reflect the overhead that the NTD introduces in the process caused by the complexity of the task planning and execution process based on alarm trigger. This complexity depends on the instructions set executed in each solution according to: 
 
 - Instructions between [] do not count towards the **overhead** calculation or whose overhead cannot be calculated because they are executed before the `planning_timestamp` and after the `exec_timestamp`.
 
@@ -444,6 +444,8 @@ overhead %>%
 
 ```
 
+### Dropped values 
+
 ```{r overhead_values_dropped}
 
 drop <- anti_join(overhead, overhead_clean) %>% select(device_id, scheduler, task_execution_delay)
@@ -463,7 +465,7 @@ knitr::kable(drop,
 
 ```
 
-
+### Overhead comparison per scheduler and device
 
 ```{r overhead_table, echo=TRUE}
 overhead_clean %>%
@@ -483,6 +485,8 @@ knitr::kable(t(overhead_summaries),
   kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
       
 ```
+
+### Overhead comparison per scheduler
 
 ```{r overhead_per_scheduler_table, echo=TRUE}
 overhead_clean %>%
@@ -506,6 +510,10 @@ Ad-hoc's average performance is `r overhead_summaries_scheduler$task_execution_d
 
 
 ## Battery level
+
+
+We look here if energy consumption is a barrier for the NTD application, compared to the less resource-demanding ad-hoc application. Again, we focues here only on the BQ and H9 devices that successfully completed the experiment.
+
 
 
 ```{r battery_dataprep, warning=FALSE}
