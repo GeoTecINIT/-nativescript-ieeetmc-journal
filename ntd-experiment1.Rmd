@@ -20,7 +20,7 @@ output:
     toc_depth: 4
 
 abstract: |
-  This document analyses the reliability and scheduling performance of the self-developed library [NativeScript Task Dispatcher (NTD)](https://github.com/GeoTecINIT/nativescript-task-dispatcher) in a series of Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). The main outcome of the paper is the NTD library. This notebook focuses on the results of the Experiment 1 (simple task scheduling), which are Table 1 and Figure 4.
+  This document analyses the reliability and scheduling performance of the self-developed library [NativeScript Task Dispatcher (NTD)](https://github.com/GeoTecINIT/nativescript-task-dispatcher) in a series of Android-based mobile devices as part of the [SyMptOMS project](http://geotec.uji.es/projects/SyMptOMS/). The main outcome of the paper is the NTD library. This notebook focuses on the results of the Experiment 1 (simple task scheduling), which are Table 1, Figure 4, Table 2, and Figure 5.
 
 urlcolor: blue
 ---
@@ -144,16 +144,16 @@ data_complete <-
          delay = diff_secs - baseline_delay)
       
 
-data_path <- here::here("exp1", "data", "data_ieeetmc.csv")
+data_path <- here::here("exp1", "data", "data_journal.csv")
 write_csv(data_complete, data_path)
-data_path <- here::here("exp1", "data", "data_ieeetmc.rds")
+data_path <- here::here("exp1", "data", "data_journal.rds")
 saveRDS(data_complete, data_path)
 
 ```
 
 
 ```{r load_assessdata, warning=FALSE}
-assessment_file <- here::here("exp1", "data", "data_ieeetmc.rds")
+assessment_file <- here::here("exp1", "data", "data_journal.rds")
 data <- readRDS(assessment_file)
 
 n_observations <- nrow(data) 
