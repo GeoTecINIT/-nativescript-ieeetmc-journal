@@ -58,9 +58,10 @@ Files to run *Experiment 1: simple task scheduling*:
 
 Files to run *Experiment 2: complex task scheduling*
 
-
+- `exp1/data-raw/*.*`. Capture data and events descriptions.
+- `exp1/data/*.*`. Simulated data per device in json format
 - `ntd-experiment2.Rmd`: R Markdown document with the analysis and visualisation of the *Experiment 2: complex task scheduling*.
-
+- `exp2/figs/simulation_graph_v3.png`: figure created to show the task graph used by the data capturing tool and simulation application, and is part of the submitted article (Fig 5).
 
 
 ## Licence

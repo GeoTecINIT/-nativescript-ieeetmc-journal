@@ -183,7 +183,7 @@ Raw data files are cleaned and merged together into a single file `exp1/data/dat
 
 # Results 
 
-## Table 1 (included in the paper)
+## List of mobile devices for experimentation (Table 1 in the paper)
 
 Below, the list of mobile devices used for both experiments. Here, we focus on Experiment 1.
 
@@ -297,7 +297,7 @@ data %>%
   dplyr::select(scheduler, device_id, device_name, device_os, delay) -> performance
 ```
 
-### Figure 4 (included in the paper)
+### Boxplot to show delay distribution per device and type of application (Figure 4 in the paper)
 
 `Delay` distribution per device and type of application. Percentage of missing task executions at the top (lower is better). Devices are sorted from the oldest to the newest version of Android. Green represents ad-hoc application, orange the NTD-based application.
 
@@ -467,7 +467,7 @@ knitr::kable(drop,
 
 ```
 
-### Overhead comparison per scheduler and device
+### Overhead comparison per scheduler and device (Table 2 in the paper)
 
 ```{r overhead_table, echo=TRUE}
 overhead_clean %>%
@@ -488,7 +488,7 @@ knitr::kable(t(overhead_summaries),
       
 ```
 
-### Overhead comparison per scheduler
+### Overhead comparison per scheduler (Table 2 in the paper)
 
 ```{r overhead_per_scheduler_table, echo=TRUE}
 overhead_clean %>%
@@ -627,6 +627,8 @@ ggplot2::ggsave(plot = p_offset_lm, filename = here::here("exp1", "figs", "fig_b
 
 ```
 
+
+### Composite plot to show BQ's battery usage (Figure 5 in the paper)
 
 ```{r battery_offset_composite, echo=TRUE, fig.height=9, fig.width=12}
 
