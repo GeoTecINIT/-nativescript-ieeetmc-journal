@@ -51,7 +51,7 @@ Files to run *Experiment 1: simple task scheduling*:
 
 - `exp1/data-raw/*.csv`. Each file corresponds to the raw data collected during 2 weeks per type of device and scheduling application.
 - `exp1/data/data_ieeetmc.{csv,rds}`: Processed data ready for analysis that integrates all raw datasets.
-- `data/devices.csv`: List of Android-based mobile devices used for experimentation.
+- `exp1/data/devices.csv`: List of Android-based mobile devices used for experimentation.
 - `ntd-experiment1.Rmd`: R Markdown document with the analysis and visualisation of the *Experiment 1: simple task scheduling*.
 - `exp1/figs/fig_boxplot.png`: figure created by the analysis `ntd-experiment1.Rmd` and is part of the submitted article (Fig 4).
 - `exp1/figs/fig_battery_composite.png`: figure created by the analysis `ntd-experiment1.Rmd` and is part of the submitted article (Fig 5).
