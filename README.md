@@ -38,7 +38,7 @@ Install [Docker CE](https://www.docker.com/community-edition) or a compatible to
 
 Download the project files, open a command line in the root directory (where this file is), and run the commands as documented at the end of the `Dockerfile` file.
 
-If you have [`repo2docker`](https://repo2docker.readthedocs.io), you can also run `repo2docker --image-name=rr-ntd-ieeetmc .`  *The `repo2docker` option is the only way the original authors worked on the analysis to ensure the computing environment is properly managed.* 
+If you have [`repo2docker`](https://repo2docker.readthedocs.io), you can also run `repo2docker --image-name=rr-ntd-journalpaper .`  *The `repo2docker` option is the only way the original authors worked on the analysis to ensure the computing environment is properly managed.* 
 
 ## Files in this repository
 
