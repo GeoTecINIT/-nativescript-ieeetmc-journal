@@ -42,7 +42,6 @@ library(grid)
 library(gridBase)
 library(gridExtra)
 library(patchwork)
-
 ```
 
 ```{r set_seed}
@@ -555,16 +554,40 @@ head_bin %>%
 
 ```
 
-### BQ's battery level offset
 
-Here, we compute the BQ's battery usage offset (last - fist battery reading) within a bin (1 bin = 1 hour).
+### BQ device’s hourly average battery consumption
 
-```{r battery_offset_plot, warning=FALSE, echo=TRUE}
+```{r battery_offset_summaries, warning=FALSE, echo=TRUE}
 
 head_bin %>% 
   filter(device_id == "BQ") %>%
   arrange(bin) %>%
   mutate(battery_offset = battery - lead(battery)) -> head_bin_bq
+
+head_bin_bq %>%
+  filter(battery_offset >= 0) %>%
+  group_by(device_id, scheduler) %>%
+  summarise(
+    offset_mean = round(mean(battery_offset, na.rm=T), 2),
+    offset_sd = round(sd(battery_offset, na.rm=T), 2)) -> head_bin_bq_summaries
+
+
+
+knitr::kable(t(head_bin_bq_summaries),
+             format = "html",
+             booktabs = TRUE,
+             caption = "TABLE. BQ's battery usage offset") %>%
+  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
+        
+```
+
+
+### BQ's battery level offset
+
+Here, we compute the BQ device's battery usage offset (last - fist battery reading) within a bin (1 bin = 1 hour).
+
+```{r battery_offset_plot, warning=FALSE, echo=TRUE}
+
 
 head_bin_bq %>%
   ggplot2::ggplot(aes(x=bin, y=battery_offset, color=scheduler)) +
@@ -591,9 +614,12 @@ ggplot2::ggsave(plot = p_offset, filename = here::here("exp1", "figs", "fig_batt
 ```
 
 
-Here, we zoom in the BQ's battery usage offset greater than zero to discard bins in whch battery is being charged. This corresponds to Figure 5 in the paper.
+Here, we zoom in the BQ device's battery usage offset greater than zero to discard bins in which battery is being charged. This corresponds to Figure 5 in the paper.
 
 ```{r battery_offset_positive_plot}
+
+head_bin_bq_summaries %>% select(scheduler, offset_mean, offset_sd) -> head_bin_bq_summaries_simplified
+
 
 head_bin_bq %>%
   filter(battery_offset >= 0) %>%
@@ -605,8 +631,18 @@ head_bin_bq %>%
   ggplot2::geom_point(size = 1, alpha = 0.5, fill= "white" ) +
   ggplot2::scale_color_brewer(palette = "Dark2") +
   ggplot2::scale_y_continuous(breaks=seq(0,5,0.5)) +
-  ggplot2::geom_smooth(method='lm', formula= y~x) +
+  ggplot2::geom_hline(data = head_bin_bq_summaries_simplified, aes(yintercept = offset_mean, color=scheduler), alpha=0.5, size=1.5) +
+  ggplot2::geom_text(data = head_bin_bq_summaries_simplified, aes(x = 170, 
+                                                                  y = offset_mean, 
+                                                                  label = paste0("mean=",offset_mean, "; sd=", offset_sd), 
+                                                                  color=scheduler),
+            size=4, nudge_y= 0.1,nudge_x = 0) +
+  
+  # ggplot2::geom_smooth(method='lm', formula= y~x) +
+  # ggpubr::stat_regline_equation(label.y = 3, label.x = 50, aes(label = ..eq.label..)) +
+  # ggpubr::stat_regline_equation(label.y = 2.75, label.x = 50, aes(label = ..rr.label..)) +
   ggplot2::facet_wrap(~ scheduler) +
+  
   ggplot2::theme_minimal() +
   ggplot2::theme(axis.text.x= element_text(size = 11), 
                  axis.text.y = element_text(size = 11), 
@@ -618,12 +654,6 @@ p_offset_lm
 
 ggplot2::ggsave(plot = p_offset_lm, filename = here::here("exp1", "figs", "fig_battery_usage_wo_charging.png"), 
                width = 7, height = 5, dpi = 300)
-
-
-
-
-
-
 
 ```
 
@@ -648,24 +678,5 @@ ggsave(fig_composite, file = here::here("exp1", "figs", "fig_battery_composite.p
 
 
 
-```{r battery_offset_summaries, warning=FALSE, echo=TRUE}
-
-head_bin_bq %>%
-  filter(battery_offset >= 0) %>%
-  group_by(device_id, scheduler) %>%
-  summarise(
-    offset_mean = round(mean(battery_offset, na.rm=T), 2),
-    offet_sd = round(sd(battery_offset, na.rm=T), 2)) -> head_bin_bq_summaries
-
-
-
-knitr::kable(t(head_bin_bq_summaries),
-             format = "html",
-             booktabs = TRUE,
-             caption = "TABLE. BQ's battery usage offset") %>%
-  kableExtra::kable_styling(full_width = TRUE, bootstrap_options = c("condensed"))
-        
-```
-
-Above plots remark that battery level offset is almost identical between the ad-hoc and NTD applications. On average, the NTD application uses `r head_bin_bq_summaries$offset_mean[2] - head_bin_bq_summaries$offset_mean[1]` more battery than the ad-hoc per hour. As a relative percentage, NTD uses `r percent(abs(1 - head_bin_bq_summaries$offset_mean[2] / head_bin_bq_summaries$offset_mean[1]))` more battery per hour than ad-hoc application. While percentage may look remarkable, it refers to tiny fractions of battery usage (< 0.1% per hour) .
+Above plots remark that battery level offset is almost identical between the ad-hoc and NTD applications. On average, the NTD application uses `r head_bin_bq_summaries$offset_mean[2] - head_bin_bq_summaries$offset_mean[1]` more battery than the ad-hoc per hour. As a relative percentage, NTD uses `r percent(abs(1 - head_bin_bq_summaries$offset_mean[2] / head_bin_bq_summaries$offset_mean[1]))` more battery per hour than ad-hoc application. While percentage may look remarkable, it refers to tiny fractions of relative battery usage (< 0.1% per hour) .
 
