@@ -50,7 +50,6 @@ set.seed(nchar("Reproducible Package for 'Using mobile Devices as Scientific Mea
 ```
 
 ```{r rawdata_devices}
-
 devices_file <- here::here("exp0", "data", "devices.csv")
 
 cols(
@@ -71,6 +70,36 @@ devices <- readr::read_csv(
   na = "NA")
 
 ```
+
+
+```{r rawdata_timestamps}
+timestamp_file <- here::here("exp0", "data", "start_end.csv")
+
+cols(
+   .default = readr::col_character(),
+   id = readr::col_character(),
+   device = readr::col_character(),
+   start_timestamp = readr::col_double(),
+   end_timestamp = readr::col_double()
+) -> export_cols
+
+timestamps <- readr::read_csv(
+  file = timestamp_file, 
+  col_names = TRUE, 
+  trim_ws=TRUE,
+  col_types = export_cols,
+  na = "NA")
+
+
+timestamps <- 
+  timestamps %>%
+  mutate(start = as_datetime(start_timestamp/1000, tz="Europe/Madrid"),
+         end = as_datetime(end_timestamp/1000, tz="Europe/Madrid"))
+  
+
+```
+
+
 
 We ran a simple experiment (Experiment 0) on early November 2021. Collected data were stored in CSV files, one per device. File names start with `SI_`.
 
@@ -222,7 +251,19 @@ data %>%
                 max_plan_date = max(plan_date),
                 n_plan_exec = round(as.numeric(max_plan_date - min_plan_date, units="mins"))) %>%
   dplyr::select(device_id, scheduler, device_os, n_plan_exec, 
-                n_real_exec, min_plan_date, max_plan_date) -> missingness
+                n_real_exec, min_plan_date, max_plan_date) -> missingness_data
+
+
+timestamps %>%
+  dplyr::mutate(n_plan_exec_adhoc = round(abs(as.numeric(difftime(start, end, units="mins"))))) %>%
+  dplyr::select(id, start, end, n_plan_exec_adhoc) -> missingness_timestamps
+
+
+missingness_data %>% 
+  dplyr::inner_join(missingness_timestamps, by = c("device_id" = "id")) %>%
+  dplyr::mutate(n_plan_exec = n_plan_exec_adhoc) %>% 
+  dplyr::select(-n_plan_exec_adhoc) -> missingness
+  
 ```
 
 
@@ -244,6 +285,8 @@ knitr::kable(missingness %>%
                select(`ID` = device_id,
                       `Scheduler` = scheduler,
                       `OS` = device_os,
+                      `Start` = start,
+                      `End` = end,
                       `# planned executions` = n_plan_exec,
                       `# real executions` = n_real_exec,
                       `% missingness` = percent_lbl),
@@ -254,7 +297,7 @@ knitr::kable(missingness %>%
 
 ```
 
-The results largely confirm what is indicated in the literature (_at least_ 50% data loss). In fact, the average loss or incompleteness exceeds 80% (see below), which roughly means that only 2 out of 10 scheduled observations are collected.
+The results largely confirm what is indicated in the literature (_at least_ 50% data loss). In fact, the average loss or incompleteness exceeds 80% (see below), which roughly means that 2 out of 10 scheduled observations are collected.
 
 
 ```{r missingness_means, echo=TRUE}

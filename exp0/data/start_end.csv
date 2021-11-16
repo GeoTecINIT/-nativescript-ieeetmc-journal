@@ -1,0 +1,5 @@
+id, device, start_timestamp, end_timestamp
+NV, Nvidia Shield Tablet (Gen 1), 1636147392798, 1636325949000
+BQ, BQ Aquaris V Plus, 1636147397145, 1636325906000
+A1, Xiaomi Mi A1, 1636147399950, 1636325777000
+H9, Honor 9 (STF-L09), 1636380077142, 1636552860000
