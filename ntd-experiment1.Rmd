@@ -636,11 +636,22 @@ head_bin_bq %>%
   ggplot2::scale_color_brewer(palette = "Dark2") +
   ggplot2::scale_y_continuous(breaks=seq(0,5,0.5)) +
   ggplot2::geom_hline(data = head_bin_bq_summaries_simplified, aes(yintercept = offset_mean, color=scheduler), alpha=0.5, size=1.5) +
-  ggplot2::geom_text(data = head_bin_bq_summaries_simplified, aes(x = 170, 
-                                                                  y = offset_mean + 0.04, 
-                                                                  label = paste0("mean=",offset_mean, "; sd=", offset_sd), 
+  ggplot2::geom_text(data = head_bin_bq_summaries_simplified, aes(x = 150, 
+                                                                  y = offset_mean, 
+                                                                  # https://stats.oarc.ucla.edu/r/codefragments/greek_letters/
+                                                                  label = paste('mu', "==", offset_mean),
                                                                   color=scheduler),
-            size=4, nudge_y= 0.1,nudge_x = 0) +
+            parse=TRUE, # Greek Symbols
+            size=5, nudge_y= 0.15,nudge_x = 0) +
+
+  ggplot2::geom_text(data = head_bin_bq_summaries_simplified, aes(x = 210, 
+                                                                  y = offset_mean, 
+                                                                  # https://stats.oarc.ucla.edu/r/codefragments/greek_letters/
+                                                                  label = paste('sigma', "==", offset_sd),
+                                                                  color=scheduler),
+            parse=TRUE, # Greek Symbols
+            size=5, nudge_y= 0.15,nudge_x = 0) +
+  
   
   # ggplot2::geom_smooth(method='lm', formula= y~x) +
   # ggpubr::stat_regline_equation(label.y = 3, label.x = 50, aes(label = ..eq.label..)) +
