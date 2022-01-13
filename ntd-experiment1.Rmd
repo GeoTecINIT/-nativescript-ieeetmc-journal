@@ -606,8 +606,8 @@ head_bin_bq %>%
   ggplot2::theme_minimal() +
   ggplot2::theme(axis.text.x= element_text(size = 11), 
                  axis.text.y = element_text(size = 11),
-                 axis.title.y = element_text(size = 13),
-                 strip.text.x = element_text(size = 12)) +
+                 axis.title.y = element_text(size = 14),
+                 strip.text.x = element_text(size = 14)) +
   ggplot2::guides(color = FALSE) -> p_offset
 
 p_offset
@@ -650,8 +650,8 @@ head_bin_bq %>%
   ggplot2::theme_minimal() +
   ggplot2::theme(axis.text.x= element_text(size = 11), 
                  axis.text.y = element_text(size = 11), 
-                 axis.title.x = element_text(size = 13),
-                 axis.title.y = element_text(size = 13),
+                 axis.title.x = element_text(size = 14),
+                 axis.title.y = element_text(size = 14),
                  strip.text.x = element_blank()) +
   ggplot2::guides(color = FALSE) -> p_offset_lm
     
