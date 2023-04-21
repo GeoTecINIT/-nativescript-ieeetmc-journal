@@ -1,15 +1,18 @@
 # NativeScript Task Dispatcher for Reliable Android Task Scheduling
 
 
-This repository is the reproducibility package for the article “Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling". In terms of software, the paper provides two main outputs. The first and most important is the **NativeScript Task Dispatcher** library, see [https://github.com/GeoTecINIT/nativescript-task-dispatcher](https://github.com/GeoTecINIT/nativescript-task-dispatcher) ([10.5281/zenodo.4530103](https://doi.org/10.5281/zenodo.4530103)). The second is the analysis and results of the two  experiments reported in the article. Code and data associated with these experiments is the focus of this repository.
+This repository is the reproducibility package for the article “Using mobile Devices as Scientific Measurement Instruments: Reliable Android Task Scheduling". 
+
+> Alberto González-Pérez, Miguel Matey-Sanz, Carlos Granell, Sven Casteleyn.
+> Using mobile devices as scientific measurement instruments: Reliable android task scheduling.
+> Pervasive and Mobile Computing, 81, 101550, 2022, ISSN 1574-1192. 
+> DOI: 10.1016/j.pmcj.2022.101550
+
+[![PMC DOI](https://img.shields.io/badge/DOI-10.1016/j.pmcj.2022.101550-yellow.svg)](https://doi.org/10.1016/j.pmcj.2022.101550)
+
+In terms of software, the paper provides two main outputs. The first and most important is the **NativeScript Task Dispatcher** library, see [https://github.com/GeoTecINIT/nativescript-task-dispatcher](https://github.com/GeoTecINIT/nativescript-task-dispatcher) ([10.5281/zenodo.4530103](https://doi.org/10.5281/zenodo.4530103)). The second is the analysis and results of the two  experiments reported in the article. Code and data associated with these experiments is the focus of this repository.
 
 
-<!--
-[![Article DOI](https://img.shields.io/badge/PUBLISHER-https%3A%2F%2Fdoi.org%2FDOI-brightgreen.svg)](https://doi.org/)
-[![Earth ArXiv Preprint
-DOI](https://img.shields.io/badge/%F0%9F%8C%8D%F0%9F%8C%8F%F0%9F%8C%8E%20EarthArXiv-doi.org%2F10.31223%2FX5ZK5V-%23FF7F2A)](https://doi.org/10.31223/X5ZK5V)
-
--->
 [![Zenodo DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.5032028.svg)](https://doi.org/10.5281/zenodo.5032028)
 
 ## Reproduce online
